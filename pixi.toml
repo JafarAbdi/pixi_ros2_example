@@ -1,0 +1,71 @@
+[workspace]
+authors   = ["JafarAbdi <jafar.uruc@gmail.com>"]
+channels  = ["conda-forge"]
+name      = "pixi_ros2"
+platforms = ["linux-64", "osx-arm64", "osx-64"]
+version   = "0.1.0"
+
+[activation.env]
+CMAKE_INSTALL_MODE          = "SYMLINK"
+COLCON_DEFAULT_OUTPUT_STYLE = "catkin_tools"
+
+[tasks]
+
+setup-colcon = { cmd = """
+colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml && \
+colcon mixin update default
+""" }
+build = { cmd = ["colcon", "build", "--build-base", "build_$ROS_DISTRO", "--install-base", "install_$ROS_DISTRO"] }
+test = { cmd = [
+  "colcon",
+  "test",
+  "--python-testing",
+  "pytest",
+  "--build-base",
+  "build_$ROS_DISTRO",
+  "--install-base",
+  "install_$ROS_DISTRO",
+], depends-on = "build" }
+
+[dependencies]
+colcon-common-extensions = ">=0.3.0,<0.4"
+colcon-mixin             = ">=0.2.3,<0.3"
+# Build dependencies
+cmake   = ">=4.1.0,<5"
+ninja   = ">=1.13.1,<2"
+mold    = ">=2.40.2,<3"
+sccache = ">=0.10.0,<0.11"
+
+[pypi-dependencies]
+colcon-ansi-colors = { git = "https://github.com/SimbeRobotics/colcon-ansi-colors" }
+
+[feature.humble]
+channels = ["https://prefix.dev/robostack-humble"]
+
+# As of pixi 0.53.0 environment variable substitution is not supported in activation.
+[feature.humble.activation]
+scripts = ["install_humble/local_setup.bash"]
+
+[feature.humble.dependencies]
+ros-humble-ros-base = "*"
+
+[feature.jazzy]
+channels = ["https://prefix.dev/robostack-jazzy"]
+
+[feature.jazzy.activation]
+scripts = ["install_jazzy/local_setup.bash"]
+
+[feature.jazzy.dependencies]
+ros-jazzy-ros-base = "*"
+
+# A lightweight environment for linting and formatting
+[feature.lint.dependencies]
+pre-commit = ">=4.3.0,<5"
+
+[feature.lint.tasks]
+lint = "pre-commit run --all-files"
+
+[environments]
+lint   = { features = ["lint"], no-default-feature = true }
+humble = { features = ["humble"] }
+jazzy  = { features = ["jazzy"] }
